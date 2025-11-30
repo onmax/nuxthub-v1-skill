@@ -1,11 +1,20 @@
 ---
 name: nuxthub-migration
-description: Migrate NuxtHub projects to v0.9.X self-hosting. Handles GitHub Actions removal, wrangler.jsonc creation, Workers CI setup. Optional Phase 2 for experimental v1/nightly with multi-cloud support (database/blob not production-ready).
+description: Use when migrating NuxtHub projects or when user mentions NuxtHub Admin sunset, GitHub Actions deployment removal, self-hosting NuxtHub, or upgrading to v1/nightly. Covers v0.9.X self-hosting (stable) and v1/nightly multi-cloud (experimental, database/blob not ready).
 ---
 
 # NuxtHub Migration
 
-Two-phase migration path. Phase 1 is stable and recommended. Phase 2 is experimental.
+## When to Use
+
+Activate this skill when:
+- User mentions NuxtHub Admin deprecation or sunset (Dec 31, 2025)
+- Project uses `.github/workflows/nuxthub.yml` or NuxtHub GitHub Action
+- User wants to self-host NuxtHub on Cloudflare Workers
+- User asks about migrating to v1 or nightly version
+- Project has `NUXT_HUB_PROJECT_KEY` or `NUXT_HUB_PROJECT_DEPLOY_TOKEN` env vars
+
+Two-phase migration. Phase 1 is stable and recommended. Phase 2 is experimental.
 
 ## Phase 1: Self-Hosting (v0.9.X) - RECOMMENDED
 
@@ -92,13 +101,17 @@ NUXT_HUB_CLOUDFLARE_CACHE_NAMESPACE_ID=<namespace-id>
 npx nuxt dev --remote
 ```
 
-### Phase 1 Complete
+### Phase 1 Checklist
 
-No changes to:
-- `nuxt.config.ts` (`hub.database: true` stays as-is)
-- `server/database/` directory structure
-- `hubDatabase()` API usage
-- Package (`@nuxthub/core`)
+- [ ] Delete `.github/workflows/nuxthub.yml`
+- [ ] Remove `NUXT_HUB_PROJECT_KEY` and `NUXT_HUB_PROJECT_DEPLOY_TOKEN` env vars
+- [ ] Create Cloudflare resources (D1, KV, R2 as needed)
+- [ ] Create `wrangler.jsonc` with bindings
+- [ ] Set `nitro.preset: 'cloudflare_module'` in nuxt.config.ts
+- [ ] Connect repo to Cloudflare Workers Builds
+- [ ] Test with `npx nuxt dev --remote`
+
+No code changes required. Keep `hub.database: true`, `server/database/`, `hubDatabase()`, and `@nuxthub/core`.
 
 ---
 
@@ -186,6 +199,18 @@ Cloudflare-specific features removed:
 - `hubBrowser()` - Puppeteer
 - `hubVectorize()` - Vectorize
 - `hubAutoRAG()` - AutoRAG
+
+### Phase 2 Checklist
+
+- [ ] Complete Phase 1 first
+- [ ] Replace `@nuxthub/core` with `@nuxthub/core-nightly`
+- [ ] Change `hub.database: true` to `hub.db: 'sqlite'`
+- [ ] Rename `server/database/` to `server/db/`
+- [ ] Update imports from `~/server/database/` to `~/server/db/`
+- [ ] Migrate `hubDatabase()` calls to `useDrizzle()`
+- [ ] Test thoroughly (database/blob features unstable)
+
+---
 
 ## Quick Reference
 
