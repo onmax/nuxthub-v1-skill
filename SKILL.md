@@ -63,6 +63,11 @@ Required binding names:
 
 ### 1.4 Set Up Workers Builds CI/CD
 
+Ensure `nuxt.config.ts` uses the `cloudflare_module` preset:
+```ts
+nitro: { preset: 'cloudflare_module' }
+```
+
 In Cloudflare Dashboard:
 1. Workers & Pages → Create → Import from Git
 2. Connect GitHub/GitLab repository
