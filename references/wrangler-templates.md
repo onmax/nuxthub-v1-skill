@@ -1,4 +1,6 @@
-# Wrangler.jsonc Templates for NuxtHub v1
+# Wrangler.jsonc Templates for NuxtHub
+
+Used in both Phase 1 (v0.9.X self-hosting) and Phase 2 (v1/nightly).
 
 ## Minimal (Database Only)
 
