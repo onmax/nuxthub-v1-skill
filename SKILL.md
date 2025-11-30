@@ -11,13 +11,15 @@ Two-phase migration path. Phase 1 is stable and recommended. Phase 2 is experime
 
 Migrate from NuxtHub Admin / GitHub Actions to self-hosted Cloudflare Workers. No code changes required.
 
-### 1.1 Remove Deprecated Deployment
+### 1.1 Remove GitHub Action Deployment
 
-Delete `.github/workflows/nuxthub.yml` or any NuxtHub-specific GitHub Action.
+Delete `.github/workflows/nuxthub.yml` or any NuxtHub-specific GitHub Action. Workers CI (step 1.4) replaces this.
 
 Remove deprecated env vars from CI/CD and `.env`:
 - `NUXT_HUB_PROJECT_KEY`
 - `NUXT_HUB_PROJECT_DEPLOY_TOKEN`
+
+Also remove any GitHub Actions secrets related to NuxtHub deployment.
 
 ### 1.2 Create Cloudflare Resources
 
