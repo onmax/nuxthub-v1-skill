@@ -30,6 +30,12 @@ Remove deprecated env vars from CI/CD and `.env`:
 
 Also remove any GitHub Actions secrets related to NuxtHub deployment.
 
+Check and clean up Cloudflare Worker secrets:
+```bash
+npx wrangler secret list --name <worker-name>
+npx wrangler secret delete NUXT_HUB_PROJECT_DEPLOY_TOKEN --name <worker-name>
+```
+
 ### 1.2 Get or Create Cloudflare Resources
 
 NuxtHub Admin already created resources in your Cloudflare account. **Reuse them to preserve existing data.**
@@ -67,10 +73,15 @@ Minimal example with database:
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "my-app",
+  "main": "dist/server/index.mjs",
+  "assets": { "directory": "dist/public" },
+  "compatibility_date": "2025-12-01",
   "compatibility_flags": ["nodejs_compat"],
   "d1_databases": [{ "binding": "DB", "database_name": "my-app-db", "database_id": "<from-wrangler-output>" }]
 }
 ```
+
+> **Note**: Nuxt cloudflare-module preset outputs to `dist/`, not `.output/`.
 
 Required binding names:
 | Feature | Binding | Type |
@@ -90,8 +101,12 @@ nitro: { preset: 'cloudflare_module' }
 In Cloudflare Dashboard:
 1. Workers & Pages → Create → Import from Git
 2. Connect GitHub/GitLab repository
-3. Set build command: `npm run build` (or `pnpm build`)
-4. Set output directory: `.output`
+3. Configure build settings (**both fields required**):
+   - **Build command**: `pnpm build` (or `npm run build`)
+   - **Deploy command**: `npx wrangler deploy`
+4. Add environment variables (e.g., secrets, API keys)
+
+> **Common mistake**: Only setting deploy command. Build must run first to generate `.output/`.
 
 ### 1.5 Configure Environment Variables (Optional)
 
@@ -115,6 +130,7 @@ npx nuxt dev --remote
 
 - [ ] Delete `.github/workflows/nuxthub.yml`
 - [ ] Remove `NUXT_HUB_PROJECT_KEY` and `NUXT_HUB_PROJECT_DEPLOY_TOKEN` env vars
+- [ ] Clean up old Worker secrets (`wrangler secret list/delete`)
 - [ ] Get existing or create new Cloudflare resources (D1, KV, R2 as needed)
 - [ ] Create `wrangler.jsonc` with bindings
 - [ ] Set `nitro.preset: 'cloudflare_module'` in nuxt.config.ts
