@@ -30,10 +30,20 @@ Remove deprecated env vars from CI/CD and `.env`:
 
 Also remove any GitHub Actions secrets related to NuxtHub deployment.
 
-### 1.2 Create Cloudflare Resources
+### 1.2 Get or Create Cloudflare Resources
 
-Create resources based on enabled features:
+NuxtHub Admin already created resources in your Cloudflare account. **Reuse them to preserve existing data.**
 
+List existing resources:
+```bash
+npx wrangler d1 list              # Find existing D1 databases
+npx wrangler kv namespace list    # Find existing KV namespaces
+npx wrangler r2 bucket list       # Find existing R2 buckets
+```
+
+Look for resources named after your project. Use their IDs in wrangler.jsonc.
+
+Only create new resources if none exist:
 ```bash
 # D1 Database (if hub.database: true)
 npx wrangler d1 create my-app-db
@@ -105,7 +115,7 @@ npx nuxt dev --remote
 
 - [ ] Delete `.github/workflows/nuxthub.yml`
 - [ ] Remove `NUXT_HUB_PROJECT_KEY` and `NUXT_HUB_PROJECT_DEPLOY_TOKEN` env vars
-- [ ] Create Cloudflare resources (D1, KV, R2 as needed)
+- [ ] Get existing or create new Cloudflare resources (D1, KV, R2 as needed)
 - [ ] Create `wrangler.jsonc` with bindings
 - [ ] Set `nitro.preset: 'cloudflare_module'` in nuxt.config.ts
 - [ ] Connect repo to Cloudflare Workers Builds
