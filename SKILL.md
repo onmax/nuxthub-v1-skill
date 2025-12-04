@@ -1,6 +1,6 @@
 ---
 name: nuxthub-migration
-description: Use when migrating NuxtHub projects or when user mentions NuxtHub Admin sunset, GitHub Actions deployment removal, self-hosting NuxtHub, or upgrading to v1/nightly. Covers v0.9.X self-hosting (stable) and v1/nightly multi-cloud (experimental, database/blob not ready).
+description: Use when migrating NuxtHub projects or when user mentions NuxtHub Admin sunset, GitHub Actions deployment removal, self-hosting NuxtHub, or upgrading to v1/nightly. Covers v0.9.X self-hosting (stable) and v1/nightly multi-cloud.
 ---
 
 # NuxtHub Migration
@@ -14,7 +14,7 @@ Activate this skill when:
 - User asks about migrating to v1 or nightly version
 - Project has `NUXT_HUB_PROJECT_KEY` or `NUXT_HUB_PROJECT_DEPLOY_TOKEN` env vars
 
-Two-phase migration. Phase 1 is stable and recommended. Phase 2 is experimental.
+Two-phase migration. Phase 1 is stable and recommended. Phase 2 is multi-cloud.
 
 ## Phase 1: Self-Hosting (v0.9.X) - RECOMMENDED
 
@@ -141,9 +141,7 @@ No code changes required. Keep `hub.database: true`, `server/database/`, `hubDat
 
 ---
 
-## Phase 2: v1/Nightly - EXPERIMENTAL
-
-> **WARNING**: Database and blob features are not production-ready. Only proceed if explicitly requested.
+## Phase 2: v1/Nightly - MULTI-CLOUD
 
 Multi-cloud support (Cloudflare, Vercel, Deno, Netlify). Breaking changes from v0.9.X.
 
@@ -188,35 +186,114 @@ const users = await db.prepare('SELECT * FROM users').all()
 
 **After:**
 ```ts
-const db = useDrizzle()
-const users = await db.select().from(tables.users)
+import { db, schema } from 'hub:db'
+// Note: db and schema are auto-imported on server-side
+const users = await db.select().from(schema.users)
 ```
 
-### 2.5 Provider-Specific Setup (Non-Cloudflare)
+### 2.5 New Import Pattern
 
-#### Vercel
-- **KV**: Add Redis via dashboard, install `ioredis`
-- **Blob**: Add Blob Store via dashboard, install `@vercel/blob`
-- **Cache**: Auto-configured
+v1 uses virtual module imports. All are auto-imported on server-side:
 
-#### Deno Deploy
-- **KV**: Auto-configured (Deno KV)
-
-#### Netlify
-- **Blob**: Install `@netlify/blobs`, set `NETLIFY_BLOB_STORE_NAME`
-
-### 2.6 New v1 Features
-
-**Dialect-specific schemas:**
 ```ts
-// server/db/schema.postgresql.ts - PostgreSQL only
-// server/db/schema.ts - All dialects
+// Database
+import { db, schema } from 'hub:db'
+import * as schema from 'hub:db:schema'
+
+// KV Storage
+import { kv } from 'hub:kv'
+
+// Blob Storage
+import { blob } from 'hub:blob'
 ```
 
-**Database hooks:**
-- `hub:db:migrations:dirs` - Add migration directories
-- `hub:db:queries:paths` - Add post-migration queries
-- `hub:db:migrations:done` - Callback after migrations
+### 2.6 CLI Commands
+
+```bash
+npx nuxt db generate              # Generate migrations from schema
+npx nuxt db migrate               # Apply migrations
+npx nuxt db mark-as-migrated [NAME]  # Mark migration as applied without running
+npx nuxt db drop <TABLE>          # Drop a table
+npx nuxt db sql [QUERY]           # Execute SQL query
+npx nuxt db sql < dump.sql        # Execute SQL from file
+
+# All commands support:
+--cwd <dir>       # Run in different directory
+--dotenv <file>   # Use different .env file
+-v, --verbose     # Verbose output
+```
+
+### 2.7 Provider-Specific Setup (Non-Cloudflare)
+
+#### Database Providers
+
+**PostgreSQL:**
+```bash
+pnpm add drizzle-orm drizzle-kit postgres @electric-sql/pglite
+```
+- Uses PGlite locally if no env vars set
+- Uses postgres-js if `DATABASE_URL`, `POSTGRES_URL`, or `POSTGRESQL_URL` set
+
+**MySQL:**
+```bash
+pnpm add drizzle-orm drizzle-kit mysql2
+```
+- Requires `DATABASE_URL` or `MYSQL_URL` env var
+
+**SQLite (Turso):**
+```bash
+pnpm add drizzle-orm drizzle-kit @libsql/client
+```
+- Uses libsql locally at `.data/db/sqlite.db`
+- Uses Turso if `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` set
+
+#### KV Providers
+
+| Provider | Package | Env Vars |
+|----------|---------|----------|
+| Upstash | `@upstash/redis` | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` |
+| Redis | `ioredis` | `REDIS_URL` |
+| Cloudflare KV | - | `KV` binding in wrangler.jsonc |
+| Deno KV | - | Auto on Deno Deploy |
+| Vercel | - | `KV_REST_API_URL`, `KV_REST_API_TOKEN` |
+
+#### Blob Providers
+
+| Provider | Package | Config |
+|----------|---------|--------|
+| Vercel Blob | `@vercel/blob` | Dashboard setup |
+| Cloudflare R2 | - | `BLOB` binding in wrangler.jsonc |
+| S3 | `aws4fetch` | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_REGION` |
+| Netlify Blobs | `@netlify/blobs` | `NETLIFY_BLOB_STORE_NAME` |
+
+### 2.8 Database Hooks (For Nuxt Modules)
+
+```ts
+// Extend schema
+nuxt.hook('hub:db:schema:extend', async ({ dialect, paths }) => {
+  paths.push(await resolvePath(`./schema/pages.${dialect}`))
+})
+
+// Add migration directories
+nuxt.hook('hub:db:migrations:dirs', (dirs) => {
+  dirs.push(resolve('./db-migrations'))
+})
+
+// Post-migration queries (must be idempotent)
+nuxt.hook('hub:db:queries:paths', (paths, dialect) => {
+  paths.push(resolve(`./db-queries/seed.${dialect}.sql`))
+})
+```
+
+### 2.9 Schema Files
+
+Schema can be in multiple locations:
+- `server/db/schema.ts`
+- `server/db/schema.{dialect}.ts`
+- `server/db/schema/*.ts`
+- `server/db/schema/*.{dialect}.ts`
+
+Generated schema at `.nuxt/hub/db/schema.mjs`.
 
 ### Deprecated Features (v1)
 
@@ -230,11 +307,13 @@ Cloudflare-specific features removed:
 
 - [ ] Complete Phase 1 first
 - [ ] Replace `@nuxthub/core` with `@nuxthub/core-nightly`
-- [ ] Change `hub.database: true` to `hub.db: 'sqlite'`
+- [ ] Change `hub.database: true` to `hub.db: 'sqlite'` (or other dialect)
 - [ ] Rename `server/database/` to `server/db/`
 - [ ] Update imports from `~/server/database/` to `~/server/db/`
-- [ ] Migrate `hubDatabase()` calls to `useDrizzle()`
-- [ ] Test thoroughly (database/blob features unstable)
+- [ ] Migrate `hubDatabase()` calls to `db` from `hub:db`
+- [ ] Update table references: `tables.X` → `schema.X`
+- [ ] Run `npx nuxt db generate` to generate migrations
+- [ ] Test all database, KV, and blob operations
 
 ---
 
@@ -245,9 +324,12 @@ Cloudflare-specific features removed:
 | Package | `@nuxthub/core` | `@nuxthub/core-nightly` |
 | Database config | `hub.database: true` | `hub.db: 'sqlite'` |
 | Directory | `server/database/` | `server/db/` |
-| API | `hubDatabase()` | `useDrizzle()` |
+| DB access | `hubDatabase()` | `db` from `hub:db` |
+| Schema access | N/A | `schema` from `hub:db` |
+| KV access | `hubKV()` | `kv` from `hub:kv` |
+| Blob access | `hubBlob()` | `blob` from `hub:blob` |
+| Migrations | Manual SQL | `npx nuxt db generate` |
 | Cloud support | Cloudflare only | Multi-cloud |
-| Stability | Stable | Experimental |
 
 ## Resources
 
@@ -255,4 +337,6 @@ Cloudflare-specific features removed:
 - [Deploy docs](https://hub.nuxt.com/docs/getting-started/deploy)
 - [v1 Installation](https://v1.hub.nuxt.com/docs/getting-started/installation)
 - [v1 Database](https://v1.hub.nuxt.com/docs/features/database)
+- [v1 KV](https://v1.hub.nuxt.com/docs/features/kv)
+- [v1 Blob](https://v1.hub.nuxt.com/docs/features/blob)
 - `references/wrangler-templates.md` - Cloudflare wrangler.jsonc templates
