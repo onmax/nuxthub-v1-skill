@@ -176,7 +176,7 @@ Update imports: `~/server/database/` → `~/server/db/`
 
 Migrations generated via `npx nuxt db generate` go to `server/db/migrations/{dialect}/`.
 
-### 2.4 Migrate API (hubDatabase → Drizzle)
+### 2.4 Migrate Database API (hubDatabase → Drizzle)
 
 **Before:**
 ```ts
@@ -191,23 +191,69 @@ import { db, schema } from 'hub:db'
 const users = await db.select().from(schema.users)
 ```
 
-### 2.5 New Import Pattern
+### 2.5 Migrate KV API (hubKV → kv)
+
+**Before:**
+```ts
+import { hubKV } from '#hub/server'
+await hubKV().set('vue', { year: 2014 })
+await hubKV().get('vue')
+await hubKV().has('vue')
+await hubKV().del('vue')
+await hubKV().keys('vue:')
+await hubKV().clear('vue:')
+```
+
+**After:**
+```ts
+import { kv } from 'hub:kv'
+// Note: kv is auto-imported on server-side
+await kv.set('vue', { year: 2014 })
+await kv.get('vue')
+await kv.has('vue')
+await kv.del('vue')
+await kv.keys('vue:')
+await kv.clear('vue:')
+```
+
+Key change: `hubKV()` function call → `kv` direct object. Same methods, different access pattern.
+
+### 2.6 Migrate Blob API (hubBlob → blob)
+
+**Before:**
+```ts
+const blob = hubBlob()
+await blob.put('file.txt', body, { contentType: 'text/plain' })
+await blob.get('file.txt')
+await blob.list({ prefix: 'uploads/' })
+await blob.del('file.txt')
+await blob.serve(event, 'file.txt')
+```
+
+**After:**
+```ts
+import { blob } from 'hub:blob'
+// Note: blob is auto-imported on server-side
+await blob.put('file.txt', body, { contentType: 'text/plain' })
+await blob.get('file.txt')
+await blob.list({ prefix: 'uploads/' })
+await blob.del('file.txt')
+await blob.serve(event, 'file.txt')
+```
+
+Key change: `hubBlob()` function call → `blob` direct object. Same methods, different access pattern.
+
+### 2.7 New Import Pattern (Summary)
 
 v1 uses virtual module imports. All are auto-imported on server-side:
 
 ```ts
-// Database
-import { db, schema } from 'hub:db'
-import * as schema from 'hub:db:schema'
-
-// KV Storage
-import { kv } from 'hub:kv'
-
-// Blob Storage
-import { blob } from 'hub:blob'
+import { db, schema } from 'hub:db'   // Database
+import { kv } from 'hub:kv'           // KV Storage
+import { blob } from 'hub:blob'       // Blob Storage
 ```
 
-### 2.6 CLI Commands
+### 2.8 CLI Commands
 
 ```bash
 npx nuxt db generate              # Generate migrations from schema
@@ -223,7 +269,7 @@ npx nuxt db sql < dump.sql        # Execute SQL from file
 -v, --verbose     # Verbose output
 ```
 
-### 2.7 Provider-Specific Setup (Non-Cloudflare)
+### 2.9 Provider-Specific Setup (Non-Cloudflare)
 
 #### Database Providers
 
@@ -266,7 +312,7 @@ pnpm add drizzle-orm drizzle-kit @libsql/client
 | S3 | `aws4fetch` | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_REGION` |
 | Netlify Blobs | `@netlify/blobs` | `NETLIFY_BLOB_STORE_NAME` |
 
-### 2.8 Database Hooks (For Nuxt Modules)
+### 2.10 Database Hooks (For Nuxt Modules)
 
 ```ts
 // Extend schema
@@ -285,7 +331,7 @@ nuxt.hook('hub:db:queries:paths', (paths, dialect) => {
 })
 ```
 
-### 2.9 Schema Files
+### 2.11 Schema Files
 
 Schema can be in multiple locations:
 - `server/db/schema.ts`
@@ -310,7 +356,9 @@ Cloudflare-specific features removed:
 - [ ] Change `hub.database: true` to `hub.db: 'sqlite'` (or other dialect)
 - [ ] Rename `server/database/` to `server/db/`
 - [ ] Update imports from `~/server/database/` to `~/server/db/`
-- [ ] Migrate `hubDatabase()` calls to `db` from `hub:db`
+- [ ] Migrate `hubDatabase()` → `db` from `hub:db`
+- [ ] Migrate `hubKV()` → `kv` from `hub:kv`
+- [ ] Migrate `hubBlob()` → `blob` from `hub:blob`
 - [ ] Update table references: `tables.X` → `schema.X`
 - [ ] Run `npx nuxt db generate` to generate migrations
 - [ ] Test all database, KV, and blob operations
