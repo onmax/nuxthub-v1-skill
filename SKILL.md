@@ -383,9 +383,9 @@ Cloudflare-specific features removed:
 
 - [Self-hosting changelog](https://hub.nuxt.com/changelog/self-hosting-first)
 - [Deploy docs](https://hub.nuxt.com/docs/getting-started/deploy)
-- [v0.10 Installation](https://v1.hub.nuxt.com/docs/getting-started/installation)
-- [v0.10 Database](https://v1.hub.nuxt.com/docs/features/database)
-- [v0.10 KV](https://v1.hub.nuxt.com/docs/features/kv)
-- [v0.10 Blob](https://v1.hub.nuxt.com/docs/features/blob)
+- [v0.10 Installation](https://hub.nuxt.com/docs/getting-started/installation)
+- [v0.10 Database](https://hub.nuxt.com/docs/features/database)
+- [v0.10 KV](https://hub.nuxt.com/docs/features/kv)
+- [v0.10 Blob](https://hub.nuxt.com/docs/features/blob)
 - [Legacy v0.9 docs](https://legacy.hub.nuxt.com)
 - `references/wrangler-templates.md` - Cloudflare wrangler.jsonc templates
