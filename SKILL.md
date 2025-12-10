@@ -1,6 +1,6 @@
 ---
 name: nuxthub-migration
-description: Use when migrating NuxtHub projects or when user mentions NuxtHub Admin sunset, GitHub Actions deployment removal, self-hosting NuxtHub, or upgrading to v1/nightly. Covers v0.9.X self-hosting (stable) and v1/nightly multi-cloud.
+description: Use when migrating NuxtHub projects or when user mentions NuxtHub Admin sunset, GitHub Actions deployment removal, self-hosting NuxtHub, or upgrading to v0.10/nightly. Covers v0.9.X self-hosting (stable) and v0.10/nightly multi-cloud.
 ---
 
 # NuxtHub Migration
@@ -11,7 +11,7 @@ Activate this skill when:
 - User mentions NuxtHub Admin deprecation or sunset (Dec 31, 2025)
 - Project uses `.github/workflows/nuxthub.yml` or NuxtHub GitHub Action
 - User wants to self-host NuxtHub on Cloudflare Workers
-- User asks about migrating to v1 or nightly version
+- User asks about migrating to v0.10 or nightly version
 - Project has `NUXT_HUB_PROJECT_KEY` or `NUXT_HUB_PROJECT_DEPLOY_TOKEN` env vars
 
 Two-phase migration. Phase 1 is stable and recommended. Phase 2 is multi-cloud.
@@ -141,7 +141,7 @@ No code changes required. Keep `hub.database: true`, `server/database/`, `hubDat
 
 ---
 
-## Phase 2: v1/Nightly - MULTI-CLOUD
+## Phase 2: v0.10/Nightly - MULTI-CLOUD
 
 Multi-cloud support (Cloudflare, Vercel, Deno, Netlify). Breaking changes from v0.9.X.
 
@@ -159,7 +159,7 @@ pnpm add @nuxthub/core-nightly
 hub: { database: true, kv: true, blob: true, cache: true }
 ```
 
-**After (v1):**
+**After (v0.10):**
 ```ts
 hub: { db: 'sqlite', kv: true, blob: true, cache: true }
 ```
@@ -245,7 +245,7 @@ Key change: `hubBlob()` function call → `blob` direct object. Same methods, di
 
 ### 2.7 New Import Pattern (Summary)
 
-v1 uses virtual module imports. All are auto-imported on server-side:
+v0.10 uses virtual module imports. All are auto-imported on server-side:
 
 ```ts
 import { db, schema } from 'hub:db'   // Database
@@ -341,7 +341,7 @@ Schema can be in multiple locations:
 
 Generated schema at `.nuxt/hub/db/schema.mjs`.
 
-### Deprecated Features (v1)
+### Deprecated Features (v0.10)
 
 Cloudflare-specific features removed:
 - `hubAI()` - Use AI SDK with Workers AI Provider
@@ -367,8 +367,8 @@ Cloudflare-specific features removed:
 
 ## Quick Reference
 
-| Aspect | v0.9.X (Phase 1) | v1/Nightly (Phase 2) |
-|--------|------------------|----------------------|
+| Aspect | v0.9.X (Phase 1) | v0.10/Nightly (Phase 2) |
+|--------|------------------|-------------------------|
 | Package | `@nuxthub/core` | `@nuxthub/core-nightly` |
 | Database config | `hub.database: true` | `hub.db: 'sqlite'` |
 | Directory | `server/database/` | `server/db/` |
@@ -383,8 +383,9 @@ Cloudflare-specific features removed:
 
 - [Self-hosting changelog](https://hub.nuxt.com/changelog/self-hosting-first)
 - [Deploy docs](https://hub.nuxt.com/docs/getting-started/deploy)
-- [v1 Installation](https://v1.hub.nuxt.com/docs/getting-started/installation)
-- [v1 Database](https://v1.hub.nuxt.com/docs/features/database)
-- [v1 KV](https://v1.hub.nuxt.com/docs/features/kv)
-- [v1 Blob](https://v1.hub.nuxt.com/docs/features/blob)
+- [v0.10 Installation](https://v1.hub.nuxt.com/docs/getting-started/installation)
+- [v0.10 Database](https://v1.hub.nuxt.com/docs/features/database)
+- [v0.10 KV](https://v1.hub.nuxt.com/docs/features/kv)
+- [v0.10 Blob](https://v1.hub.nuxt.com/docs/features/blob)
+- [Legacy v0.9 docs](https://legacy.hub.nuxt.com)
 - `references/wrangler-templates.md` - Cloudflare wrangler.jsonc templates
