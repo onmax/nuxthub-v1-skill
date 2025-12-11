@@ -1,3 +1,5 @@
+> **Moved to [onmax/nuxt-skills](https://github.com/onmax/nuxt-skills)** - This repo is archived. Install via `/plugin marketplace add onmax/nuxt-skills`
+
 # NuxtHub Migration Skill
 
 Claude Code skill for migrating NuxtHub projects. Two-phase approach.
