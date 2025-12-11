@@ -1,4 +1,4 @@
-> **Moved to [onmax/nuxt-skills](https://github.com/onmax/nuxt-skills)** - This repo is archived. Install via `/plugin marketplace add onmax/nuxt-skills`
+> **See also [onmax/nuxt-skills](https://github.com/onmax/nuxt-skills)** - Vue, Nuxt, and NuxtHub skills for AI coding assistants
 
 # NuxtHub Migration Skill
 
