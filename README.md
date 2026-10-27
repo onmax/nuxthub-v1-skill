@@ -2,6 +2,8 @@
 
 # NuxtHub Migration Skill
 
+[![docs](https://comark-ui.onmax.me/badge.svg?label=docs&value=nuxthub-v1-skill)](https://github.com/onmax/nuxthub-v1-skill#phases)
+
 Claude Code skill for migrating NuxtHub projects. Two-phase approach.
 
 ## Install
